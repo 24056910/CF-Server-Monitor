@@ -429,12 +429,39 @@ async function loadThemeIndex(themeUrl) {
 
 function buildHtmlResponse(html, settings, request, env = {}, previewThemeUrl = '') {
   const rendered = injectAppearanceSettings(html, settings, env);
+
+  const isPublicDashboard = new URL(request.url).pathname === '/';
+
+  const csp = isPublicDashboard
+    ? rendered.csp.replace(
+        /frame-ancestors\s+[^;]+/i,
+        "frame-ancestors 'self' https://itwz.cn https://www.itwz.cn"
+      )
+    : rendered.csp;
+
   const headers = new Headers({
     'Content-Type': 'text/html;charset=UTF-8',
     'X-Content-Type-Options': 'nosniff',
-    'X-Frame-Options': 'DENY',
-    'Content-Security-Policy': rendered.csp
+    'Content-Security-Policy': csp
   });
+
+  if (!isPublicDashboard) {
+    headers.set('X-Frame-Options', 'DENY');
+  }
+
+  if (previewThemeUrl) {
+    headers.append('Set-Cookie', buildPreviewCookie(request, previewThemeUrl));
+  } else if (getPreviewThemeUrlFromCookie(request)) {
+    headers.append('Set-Cookie', buildClearPreviewCookie(request));
+  }
+
+  return new Response(rendered.html, { headers });
+}
+
+
+  if (!isPublicDashboard) {
+    headers.set('X-Frame-Options', 'DENY');
+  }
 
   if (previewThemeUrl) {
     headers.append('Set-Cookie', buildPreviewCookie(request, previewThemeUrl));
