@@ -458,20 +458,6 @@ function buildHtmlResponse(html, settings, request, env = {}, previewThemeUrl = 
   return new Response(rendered.html, { headers });
 }
 
-
-  if (!isPublicDashboard) {
-    headers.set('X-Frame-Options', 'DENY');
-  }
-
-  if (previewThemeUrl) {
-    headers.append('Set-Cookie', buildPreviewCookie(request, previewThemeUrl));
-  } else if (getPreviewThemeUrlFromCookie(request)) {
-    headers.append('Set-Cookie', buildClearPreviewCookie(request));
-  }
-
-  return new Response(rendered.html, { headers });
-}
-
 function buildThemeIndexErrorResponse() {
   return new Response('Theme index.html is unavailable', {
     status: 502,
